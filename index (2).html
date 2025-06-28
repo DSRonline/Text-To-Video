@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text to Video Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    h1 { text-align: center; }
+    textarea, select, button { width: 100%; padding: 10px; margin-top: 10px; }
+    #status { margin-top: 10px; color: green; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Text to AI Video Generator</h1>
+  <textarea id="inputText" rows="6" placeholder="यहाँ अपनी कविता या टेक्स्ट डालें..."></textarea>
+  <select id="orientation">
+    <option value="landscape">Landscape (वाइड)</option>
+    <option value="portrait">Portrait (मोबाइल)</option>
+  </select>
+  <button onclick="generateVideo()">वीडियो बनाएँ</button>
+  <div id="status"></div>
+
+  <script>
+    async function generateVideo() {
+      const text = document.getElementById('inputText').value.trim();
+      const orientation = document.getElementById('orientation').value;
+      const status = document.getElementById('status');
+
+      if (!text) return alert("कृपया कोई टेक्स्ट डालें।");
+
+      status.textContent = "वीडियो बनाया जा रहा है... कृपया प्रतीक्षा करें...";
+
+      // Simulate image generation + video creation
+      await new Promise(r => setTimeout(r, 3000)); // fake delay
+
+      status.innerHTML = "✅ वीडियो तैयार है! (डेमो)<br>Duration: 60s<br>Images: 20<br>Orientation: " + orientation;
+    }
+  </script>
+</body>
+</html>
