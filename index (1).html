@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>Text to Video Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background: #f0f2f5;
+    }
+    h2 {
+      text-align: center;
+    }
+    textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    #videoPreview, #downloadLink {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+    video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .loading {
+      font-weight: bold;
+      color: green;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🎬 Text to AI Image Video Generator</h2>
+
+<label for="orientation">वीडियो Orientation चुनें:</label>
+<select id="orientation">
+  <option value="landscape">📺 Landscape (1280x720)</option>
+  <option value="portrait">📱 Portrait (720x1280)</option>
+</select>
+
+<label for="userText">अपना टेक्स्ट लिखें (60 सेकंड तक):</label>
+<textarea id="userText" rows="10" placeholder="अपनी कविता, विचार, या कहानी लिखें..."></textarea>
+
+<button onclick="startGeneration()">🎥 वीडियो बनाएं</button>
+<div class="loading" id="progress"></div>
+
+<div id="videoPreview">
+  <h3>🔍 Generated Video Preview</h3>
+  <video id="finalVideo" controls></video>
+  <br>
+  <a id="downloadLink" download="video.webm">⬇️ वीडियो डाउनलोड करें</a>
+</div>
+
+<script>
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    const testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
+
+async function startGeneration() {
+  const text = document.getElementById("userText").value.trim();
+  const orientation = document.getElementById("orientation").value;
+  const progress = document.getElementById("progress");
+
+  if (!text) {
+    alert("कृपया टेक्स्ट लिखें!");
+    return;
+  }
+
+  progress.innerText = "🔄 टेक्स्ट को प्रोसेस किया जा रहा है...";
+  const lines = text.match(/[^.!?\n]+[.!?\n]?/g).slice(0, 20);
+  const width = orientation === 'landscape' ? 1280 : 720;
+  const height = orientation === 'landscape' ? 720 : 1280;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  const stream = canvas.captureStream();
+  const recorder = new MediaRecorder(stream);
+  const chunks = [];
+
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const videoURL = URL.createObjectURL(blob);
+    const finalVideo = document.getElementById("finalVideo");
+    finalVideo.src = videoURL;
+    document.getElementById("videoPreview").style.display = "block";
+    document.getElementById("downloadLink").href = videoURL;
+    document.getElementById("downloadLink").style.display = "inline-block";
+    progress.innerText = "✅ वीडियो तैयार है!";
+  };
+
+  recorder.start();
+  let index = 0;
+  const music = new Audio("https://cdn.pixabay.com/audio/2023/03/23/audio_f065b1f4e2.mp3");
+  music.crossOrigin = "anonymous";
+  music.play();
+
+  for (let line of lines) {
+    progress.innerText = `🎬 वीडियो बन रहा है: ${index + 1} / ${lines.length} दृश्य`;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = `https://source.unsplash.com/random/${width}x${height}/?${encodeURIComponent(line.split(" ").slice(0, 5).join(" "))}&sig=${Math.random()}`;
+    await new Promise(resolve => {
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, width, height);
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+        ctx.fillRect(0, height - 100, width, 100);
+        ctx.fillStyle = "white";
+        ctx.font = "28px sans-serif";
+        wrapText(ctx, line.trim(), 30, height - 60, width - 60, 30);
+        setTimeout(resolve, 3000);
+        index++;
+      };
+    });
+  }
+
+  recorder.stop();
+  music.pause();
+  music.currentTime = 0;
+}
+</script>
+
+</body>
+</html>
